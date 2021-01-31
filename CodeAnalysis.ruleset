@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RuleSet Name="CodeAnalysis ruleset" Description="CodeAnalysis ruleset" ToolsVersion="14.0">
+  <Include Path="minimumrecommendedrules.ruleset" Action="Default" />
+  <Rules AnalyzerId="StyleCop.Analyzers" RuleNamespace="StyleCop.Analyzers">
+    <Rule Id="SA0001" Action="None" /> <!-- Disable "Enable XML documentation output" -->
+
+    <!-- Disable most documentation rules excluding the FileHeader rules-->
+    <Rule Id="SA1600" Action="None" /> <!-- Disable ElementsMustBeDocumented -->
+    <Rule Id="SA1601" Action="None" /> <!-- Disable PartialElementsMustBeDocumented -->
+    <Rule Id="SA1602" Action="None" /> <!-- Disable EnumerationItemsMustBeDocumented -->
+    <Rule Id="SA1603" Action="None" /> <!-- Disable DocumentationMustContainValidXml -->
+    <Rule Id="SA1604" Action="None" /> <!-- Disable ElementDocumentationMustHaveSummary -->
+    <Rule Id="SA1605" Action="None" /> <!-- Disable PartialElementDocumentationMustHaveSummary -->
+    <Rule Id="SA1606" Action="None" /> <!-- Disable ElementDocumentationMustHaveSummaryText -->
+    <Rule Id="SA1607" Action="None" /> <!-- Disable PartialElementDocumentationMustHaveSummaryText -->
+    <Rule Id="SA1608" Action="None" /> <!-- Disable ElementDocumentationMustNotHaveDefaultSummary -->
+    <Rule Id="SA1609" Action="None" /> <!-- Disable PropertyDocumentationMustHaveValue -->
+    <Rule Id="SA1610" Action="None" /> <!-- Disable PropertyDocumentationMustHaveValueText -->
+    <Rule Id="SA1611" Action="None" /> <!-- Disable ElementParametersMustBeDocumented -->
+    <Rule Id="SA1612" Action="None" /> <!-- Disable ElementParameterDocumentationMustMatchElementParameters -->
+    <Rule Id="SA1613" Action="None" /> <!-- Disable ElementParameterDocumentationMustDeclareParameterName -->
+    <Rule Id="SA1614" Action="None" /> <!-- Disable ElementParameterDocumentationMustHaveText -->
+    <Rule Id="SA1615" Action="None" /> <!-- Disable ElementReturnValueMustBeDocumented -->
+    <Rule Id="SA1616" Action="None" /> <!-- Disable ElementReturnValueDocumentationMustHaveText -->
+    <Rule Id="SA1617" Action="None" /> <!-- Disable VoidReturnValueMustNotBeDocumented -->
+    <Rule Id="SA1618" Action="None" /> <!-- Disable GenericTypeParametersMustBeDocumented -->
+    <Rule Id="SA1619" Action="None" /> <!-- Disable GenericTypeParametersMustBeDocumentedPartialClass -->
+    <Rule Id="SA1620" Action="None" /> <!-- Disable GenericTypeParameterDocumentationMustMatchTypeParameters -->
+    <Rule Id="SA1621" Action="None" /> <!-- Disable GenericTypeParameterDocumentationMustDeclareParameterName -->
+    <Rule Id="SA1622" Action="None" /> <!-- Disable GenericTypeParameterDocumentationMustHaveText -->
+    <Rule Id="SA1623" Action="None" /> <!-- Disable PropertySummaryDocumentationMustMatchAccessors -->
+    <Rule Id="SA1624" Action="None" /> <!-- Disable PropertySummaryDocumentationMustOmitSetAccessorWithRestrictedAccess -->
+    <Rule Id="SA1625" Action="None" /> <!-- Disable ElementDocumentationMustNotBeCopiedAndPasted -->
+    <Rule Id="SA1627" Action="None" /> <!-- Disable DocumentationTextMustNotBeEmpty -->
+    <Rule Id="SA1628" Action="None" /> <!-- Disable DocumentationTextMustBeginWithACapitalLetter -->
+    <Rule Id="SA1629" Action="None" /> <!-- Disable DocumentationTextMustEndWithAPeriod -->
+    <Rule Id="SA1630" Action="None" /> <!-- Disable DocumentationTextMustContainWhitespace -->
+    <Rule Id="SA1631" Action="None" /> <!-- Disable DocumentationMustMeetCharacterPercentage -->
+    <Rule Id="SA1632" Action="None" /> <!-- Disable DocumentationTextMustMeetMinimumCharacterLength -->
+    <Rule Id="SA1642" Action="None" /> <!-- Disable ConstructorSummaryDocumentationMustBeginWithStandardText -->
+    <Rule Id="SA1643" Action="None" /> <!-- Disable DestructorSummaryDocumentationMustBeginWithStandardText -->
+    <Rule Id="SA1644" Action="None" /> <!-- Disable DocumentationHeadersMustNotContainBlankLines -->
+    <Rule Id="SA1645" Action="None" /> <!-- Disable IncludedDocumentationFileDoesNotExist -->
+    <Rule Id="SA1646" Action="None" /> <!-- Disable IncludedDocumentationXPathDoesNotExist -->
+    <Rule Id="SA1647" Action="None" /> <!-- Disable IncludeNodeDoesNotContainValidFileAndPath -->
+    <Rule Id="SA1648" Action="None" /> <!-- Disable InheritDocMustBeUsedWithInheritingClass -->
+    <Rule Id="SA1650" Action="None" /> <!-- Disable ElementDocumentationMustBeSpelledCorrectly -->
+    <Rule Id="SA1651" Action="None" /> <!-- Disable DoNotUsePlaceholderElements -->
+  </Rules>
+</RuleSet>
