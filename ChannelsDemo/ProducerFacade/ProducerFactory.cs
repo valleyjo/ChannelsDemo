@@ -22,10 +22,12 @@
     }
 
     /// <summary>
-    /// This method uses the fileName argument as a trigger to determine
+    /// This method uses the rootDirectory ctor argument as a trigger to determine
     /// which type of Producer is required.
     /// </summary>
-    /// <param name="fileName">The file to produce to. Null or empty indicates to use the LoggingProducer.</param>
+    /// <param name="fileName">The file to produce to. Passing this at construction
+    /// time allows for the ability to inject a construction time value.
+    /// Provided for simulation.</param>
     /// <returns></returns>
     public IProducer Get(string fileName)
     {
@@ -35,27 +37,32 @@
       }
       else
       {
-        return new RealFileProducer(this.rootDirectory, fileName, this.token, this.logger);
+        var fileConnection = new FileConnection(this.rootDirectory, fileName, this.token, this.logger);
+        return new RealFileProducer(fileConnection);
       }
     }
+
+    // TODO: Place LoggingProducer as internal class also?
 
     /// <summary>
     /// This class is an internal wrapper for an external producer.
     /// In the case the external producer does not have a provided interface,
     /// this is where we can provide an implementation for our own interface.
+    /// It's just a pass through to the external implementation.
     /// </summary>
     private class RealFileProducer : IProducer
     {
-      private readonly FileProducer producer;
+      private readonly FileConnection connection;
 
-      public RealFileProducer(string rootDirectory, string fileName, CancellationToken token, ILogger logger) =>
-        this.producer = new FileProducer(rootDirectory, fileName, token, logger);
+      public RealFileProducer(FileConnection connection) => this.connection = connection;
 
-      public bool IsConnected() => this.producer.IsConnected();
+      public bool IsConnected() => this.connection.IsConnected();
 
-      public async ValueTask ProduceAsync(char value) => await this.producer.ProduceAsync(value);
+      public async ValueTask ProduceAsync(char value) => await this.connection.Client.ProduceAsync(value);
 
-      public async Task ShutdownAsync() => await this.producer.ShutdownAsync();
+      public void Shutdown() => this.connection.Disconnect();
+
+      public void Connect() => this.connection.Connect();
     }
   }
 }

@@ -11,7 +11,7 @@
   {
     public static void Main(string[] args)
     {
-      var loggerFactory = LoggerFactory.Create(builder => builder.AddConsole());
+      ILoggerFactory loggerFactory = LoggerFactory.Create(builder => builder.AddConsole());
       ILogger logger = loggerFactory.CreateLogger("ChannelsDemo");
       var cts = new CancellationTokenSource();
 
@@ -22,7 +22,8 @@
 
       Task producerTask = producer.RunAsync();
 
-      RunAsync(cts.Token, producer, logger).Wait();
+      RunAsync(producer, logger).Wait();
+      cts.Cancel();
 
       Console.WriteLine();
       logger.LogInformation("Waiting for producer to shutdown");
@@ -33,15 +34,19 @@
     private static string GetWorkingDirectory() =>
       Path.GetDirectoryName(Process.GetCurrentProcess().MainModule.FileName);
 
-    private static async Task RunAsync(CancellationToken token, ProducerWrapper producer, ILogger logger)
+    private static async Task RunAsync(ProducerWrapper producer, ILogger logger)
     {
-      logger.LogInformation("Press 'ctrl' + 'c' to exit");
+      logger.LogInformation("Press 'esc' to exit");
       logger.LogInformation("Press any key to stream it to the output file:");
 
-      ConsoleKeyInfo keyPress = Console.ReadKey();
-      while (keyPress.Key != ConsoleKey.Escape)
+      while (true)
       {
-        keyPress = Console.ReadKey();
+        ConsoleKeyInfo keyPress = Console.ReadKey();
+        if (keyPress.Key == ConsoleKey.Escape)
+        {
+          return;
+        }
+
         await producer.ProduceAsync(keyPress.KeyChar);
       }
     }

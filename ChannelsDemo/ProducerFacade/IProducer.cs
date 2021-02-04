@@ -12,6 +12,8 @@
 
     public bool IsConnected();
 
-    public Task ShutdownAsync();
+    public void Shutdown();
+
+    public void Connect();
   }
 }

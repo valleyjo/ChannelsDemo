@@ -11,12 +11,17 @@
   internal class LoggingProducer : IProducer
   {
     private readonly ILogger logger;
+    private TaskCompletionSource<Task> tcs;
     private bool isConnected;
 
     public LoggingProducer(ILogger logger)
     {
       this.logger = logger;
       this.isConnected = false;
+
+      // start off allowing production unless toggled off by the user
+      this.tcs = new TaskCompletionSource<Task>();
+      this.tcs.SetResult(Task.CompletedTask);
     }
 
     public void ToggleConnected() => this.isConnected = !this.isConnected;
@@ -27,16 +32,24 @@
       return this.isConnected;
     }
 
-    public ValueTask ProduceAsync(char value)
+    public async ValueTask ProduceAsync(char value)
     {
+      // if the task is set to CompletedTask, this completes syncronously
+      // if the TCS is not set, then we will pause here until it is set.
+      // This allows us to UT this asyncronous code in a syncronous way
+      await this.tcs.Task;
       this.logger.LogInformation($"produced value '{value}'");
-      return new ValueTask(Task.CompletedTask);
     }
 
-    public Task ShutdownAsync()
+    public void PauseProduction() => this.tcs = new TaskCompletionSource<Task>();
+
+    public void CompleteProduction()
     {
-      this.logger.LogInformation($"{nameof(LoggingProducer)}.{nameof(LoggingProducer.ShutdownAsync)}");
-      return Task.CompletedTask;
+      this.tcs.SetResult(Task.CompletedTask);
     }
+
+    public void Shutdown() => this.logger.LogInformation($"{nameof(LoggingProducer)}.{nameof(LoggingProducer.Shutdown)}");
+
+    public void Connect() => this.logger.LogInformation($"{nameof(LoggingProducer)}.{nameof(LoggingProducer.Connect)}");
   }
 }

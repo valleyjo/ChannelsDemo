@@ -13,21 +13,29 @@
     [TestMethod]
     public void ProduceThenRunTest()
     {
-      Setup(out var logLines, out var producer);
+      Setup(out List<string> logLines, out ProducerWrapper producer);
       producer.ProduceAsync('c').AsTask().Wait();
       Task producerTask = producer.RunAsync();
       producer.ShutdownAsync().Wait();
-      logLines[0].Should().Be("[Information]produced value 'c'");
+      logLines.Should().Contain(s => s.Contains("[Information]produced value 'c'"));
     }
 
     [TestMethod]
     public void RunThenProduceTest()
     {
-      Setup(out var logLines, out var producer);
+      Setup(out List<string> logLines, out ProducerWrapper producer);
       Task producerTask = producer.RunAsync();
       producer.ProduceAsync('f').AsTask().Wait();
       producer.ShutdownAsync().Wait();
-      logLines[0].Should().Contain("[Information]produced value 'f'");
+      logLines.Should().Contain(s => s.Contains("[Information]produced value 'f'"));
+    }
+
+    [TestMethod]
+    public void ProduceWhenFullTest()
+    {
+      Setup(out List<string> logLines, out ProducerWrapper producer);
+      Task producerTask = producer.RunAsync();
+      producer.ProduceAsync('f').AsTask().Wait();
     }
 
     private static void Setup(out List<string> logLines, out ProducerWrapper producer)
