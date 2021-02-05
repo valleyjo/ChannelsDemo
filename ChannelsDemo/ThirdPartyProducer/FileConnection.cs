@@ -63,10 +63,16 @@
         // Syncronously disconnect from the file. This is the best we can do to
         // simulate a failure in the connection.
         this.Disconnect();
+        this.charsWritten = 0;
+        this.logger.LogWarning("Channel randomly disconnected");
       }
     }
 
-    public void Connect() => this.fileStream = File.OpenWrite(this.fullFilePath);
+    public void Connect()
+    {
+      this.fileStream = File.OpenWrite(this.fullFilePath);
+      this.logger.LogInformation($"{nameof(FileConnection)}.{nameof(FileConnection.Connect)}");
+    }
 
     public bool IsConnected() => this.fileStream != null;
 
