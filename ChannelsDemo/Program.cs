@@ -5,6 +5,7 @@
   using System.IO;
   using System.Threading;
   using System.Threading.Tasks;
+  using ChannelsDemo.ProducerFacade;
   using Microsoft.Extensions.Logging;
 
   public class Program

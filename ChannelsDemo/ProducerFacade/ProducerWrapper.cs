@@ -1,4 +1,4 @@
-﻿namespace ChannelsDemo
+﻿namespace ChannelsDemo.ProducerFacade
 {
   using System.Threading;
   using System.Threading.Channels;

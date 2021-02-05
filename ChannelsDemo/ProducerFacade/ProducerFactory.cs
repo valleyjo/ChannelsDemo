@@ -1,7 +1,8 @@
-﻿namespace ChannelsDemo
+﻿namespace ChannelsDemo.ProducerFacade
 {
   using System.Threading;
   using System.Threading.Tasks;
+  using ChannelsDemo.ThirdPartyProducer;
   using Microsoft.Extensions.Logging;
 
   /// <summary>

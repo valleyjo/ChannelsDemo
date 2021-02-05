@@ -1,8 +1,12 @@
 ﻿namespace ChannelsDemo
 {
+  using System;
   using System.Collections.Generic;
+  using System.Diagnostics;
   using System.Threading;
+  using System.Threading.Channels;
   using System.Threading.Tasks;
+  using ChannelsDemo.ProducerFacade;
   using FluentAssertions;
   using Microsoft.Extensions.Logging;
   using Microsoft.VisualStudio.TestTools.UnitTesting;

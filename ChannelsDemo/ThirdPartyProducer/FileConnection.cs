@@ -1,4 +1,4 @@
-﻿namespace ChannelsDemo
+﻿namespace ChannelsDemo.ThirdPartyProducer
 {
   using System;
   using System.IO;

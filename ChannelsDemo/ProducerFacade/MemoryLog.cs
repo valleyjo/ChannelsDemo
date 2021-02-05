@@ -1,4 +1,4 @@
-﻿namespace ChannelsDemo
+﻿namespace ChannelsDemo.ProducerFacade
 {
   using System;
   using System.Collections.Generic;
