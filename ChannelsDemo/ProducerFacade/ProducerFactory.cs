@@ -13,12 +13,18 @@
     private readonly CancellationToken token;
     private readonly string rootDirectory;
     private readonly ILogger logger;
+    private readonly IProducer defaultProducer;
 
-    public ProducerFactory(CancellationToken token, ILogger logger, string rootDirectory = null)
+    public ProducerFactory(
+      CancellationToken token,
+      ILogger logger,
+      string rootDirectory,
+      IProducer defaultProducer = null)
     {
       this.token = token;
       this.rootDirectory = rootDirectory;
       this.logger = logger;
+      this.defaultProducer = defaultProducer;
     }
 
     /// <summary>
@@ -31,14 +37,14 @@
     /// <returns></returns>
     public IProducer Get(string fileName)
     {
-      if (string.IsNullOrEmpty(this.rootDirectory))
-      {
-        return new LoggingProducer(this.logger);
-      }
-      else
+      if (this.defaultProducer == null)
       {
         var fileConnection = new FileConnection(this.rootDirectory, fileName, this.token, this.logger);
         return new RealFileProducer(fileConnection);
+      }
+      else
+      {
+        return this.defaultProducer;
       }
     }
 
