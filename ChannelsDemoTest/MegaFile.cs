@@ -9,6 +9,7 @@ namespace Sample
   using System.Threading.Channels;
   using System.Threading.Tasks;
 
+  // [alexval]: Why interface implementing multiple other interfaces? Why not just compose directly?
   public interface IChannel<T> : IReadBuffer<T>, IWriteBuffer<T>, IDisposable
   {
   }
@@ -34,9 +35,7 @@ namespace Sample
       this.channel = Channel.CreateUnbounded<T>(new UnboundedChannelOptions
       {
         AllowSynchronousContinuations = allowSynchronousContinuations,
-
         SingleReader = true,
-
         SingleWriter = true,
       });
     }

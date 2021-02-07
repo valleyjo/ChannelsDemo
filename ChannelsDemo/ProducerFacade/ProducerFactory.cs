@@ -9,23 +9,20 @@
   /// This class is used to create IProducer implementations. It allows for
   /// testability in the ProducerWrapper class.
   /// </summary>
-  public class ProducerFactory
+  public class ProducerFactory : IProducerFactory
   {
     private readonly CancellationToken token;
     private readonly string rootDirectory;
     private readonly ILogger logger;
-    private readonly IProducer defaultProducer;
 
     public ProducerFactory(
       CancellationToken token,
       ILogger logger,
-      string rootDirectory,
-      IProducer defaultProducer = null)
+      string rootDirectory)
     {
       this.token = token;
       this.rootDirectory = rootDirectory;
       this.logger = logger;
-      this.defaultProducer = defaultProducer;
     }
 
     /// <summary>
@@ -38,18 +35,9 @@
     /// <returns></returns>
     public IProducer Get(string fileName)
     {
-      if (this.defaultProducer == null)
-      {
-        var fileConnection = new FileConnection(this.rootDirectory, fileName, this.token, this.logger);
-        return new RealFileProducer(fileConnection);
-      }
-      else
-      {
-        return this.defaultProducer;
-      }
+      var fileConnection = new FileConnection(this.rootDirectory, fileName, this.token, this.logger);
+      return new RealFileProducer(fileConnection);
     }
-
-    // TODO: Place LoggingProducer as internal class also?
 
     /// <summary>
     /// This class is an internal wrapper for an external producer.

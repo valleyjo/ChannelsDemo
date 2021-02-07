@@ -12,36 +12,40 @@
   public class ProducerWrapper
   {
     private readonly CancellationToken token;
-    private readonly ProducerFactory factory;
+    private readonly IProducerFactory factory;
     private readonly Channel<char> channel;
     private IProducer currentProducer;
 
-    public ProducerWrapper(ProducerFactory factory, CancellationToken token, int maxSize)
+    public ProducerWrapper(
+      IProducerFactory factory,
+      CancellationToken token,
+      int maxSize = short.MaxValue,
+      bool allowSynchronousContinuations = false)
     {
       this.token = token;
       this.factory = factory;
       var options = new BoundedChannelOptions(maxSize)
       {
         FullMode = BoundedChannelFullMode.DropWrite,
+        AllowSynchronousContinuations = allowSynchronousContinuations,
       };
 
       this.channel = Channel.CreateBounded<char>(options);
     }
 
-    public async ValueTask ProduceAsync(char value) => await this.channel.Writer.WriteAsync(value, this.token);
+    public bool Produce(char value) => this.channel.Writer.TryWrite(value);
 
     public async Task RunAsync()
     {
       while (!this.channel.Reader.Completion.IsCompleted)
       {
-        char value = await this.channel.Reader.ReadAsync(this.token);
+        char value = await this.channel.Reader.ReadAsync();
         await this.ProduceInternalAsync(value);
      }
     }
 
     public async Task ShutdownAsync()
     {
-      // primitive type assignment is atomic
       this.channel.Writer.Complete();
 
       // clear out any remaining data in the channel before we shut down

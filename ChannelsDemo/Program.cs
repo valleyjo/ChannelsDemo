@@ -23,7 +23,7 @@
 
       Task producerTask = producer.RunAsync();
 
-      RunAsync(producer, logger).Wait();
+      RunLoop(producer, logger);
       cts.Cancel();
 
       Console.WriteLine();
@@ -35,7 +35,7 @@
     private static string GetWorkingDirectory() =>
       Path.GetDirectoryName(Process.GetCurrentProcess().MainModule.FileName);
 
-    private static async Task RunAsync(ProducerWrapper producer, ILogger logger)
+    private static void RunLoop(ProducerWrapper producer, ILogger logger)
     {
       logger.LogInformation("Press 'esc' to exit");
       logger.LogInformation("Press any key to stream it to the output file:");
@@ -48,7 +48,7 @@
           return;
         }
 
-        await producer.ProduceAsync(keyPress.KeyChar);
+        producer.Produce(keyPress.KeyChar);
       }
     }
  }
