@@ -35,13 +35,14 @@
 
       Console.WriteLine();
       logger.LogInformation("Waiting for producer to shutdown");
+      producerTask.Wait();
       logger.LogInformation("Finished. Exiting.");
     }
 
     private static string GetWorkingDirectory() =>
       Path.GetDirectoryName(Process.GetCurrentProcess().MainModule.FileName);
 
-    private static void RunLoop(IWriteBuffer<char> producer, ILogger logger)
+    private static void RunLoop(IWriteBuffer<char> writeBuffer, ILogger logger)
     {
       logger.LogInformation("Press 'esc' to exit");
       logger.LogInformation("Press any key to stream it to the output file:");
@@ -54,7 +55,7 @@
           return;
         }
 
-        producer.TryWrite(keyPress.KeyChar);
+        writeBuffer.TryWrite(keyPress.KeyChar);
       }
     }
  }
