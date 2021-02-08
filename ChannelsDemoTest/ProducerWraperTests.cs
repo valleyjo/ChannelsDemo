@@ -1,8 +1,10 @@
-﻿namespace ChannelsDemo
+﻿namespace ChannelsDemo.Test
 {
+  using System;
   using System.Collections.Generic;
   using System.Threading;
   using System.Threading.Tasks;
+  using ChannelsDemo.ChannelFacade;
   using ChannelsDemo.ProducerFacade;
   using FluentAssertions;
   using Microsoft.Extensions.Logging;
@@ -14,8 +16,8 @@
     [TestMethod]
     public void ProduceThenRunTest()
     {
-      Setup(out List<string> logLines, out ProducerWrapper producer, out BlockingLoggingProducer blockingLoggingProducer);
-      producer.Produce('c').Should().BeTrue();
+      Setup(out List<string> logLines, out IWriteBuffer<char> writeBuffer, out BlockingLoggingProducer blockingLoggingProducer, out ProducerWrapper<char> producer);
+      writeBuffer.TryWrite('c').Should().BeTrue();
       Task producerTask = producer.RunAsync();
       blockingLoggingProducer.UnblockOne();
       logLines.Should().Contain(s => s.Contains("[Information]produced value 'c'"));
@@ -24,9 +26,9 @@
     [TestMethod]
     public void RunThenProduceTest()
     {
-      Setup(out List<string> logLines, out ProducerWrapper producer, out BlockingLoggingProducer blockingLoggingProducer);
+      Setup(out List<string> logLines, out IWriteBuffer<char> writeBuffer, out BlockingLoggingProducer blockingLoggingProducer, out ProducerWrapper<char> producer);
       Task producerTask = producer.RunAsync();
-      producer.Produce('f').Should().BeTrue();
+      writeBuffer.TryWrite('f').Should().BeTrue();
       blockingLoggingProducer.UnblockOne();
       logLines.Should().Contain(s => s.Contains("[Information]produced value 'f'"));
     }
@@ -34,75 +36,68 @@
     [TestMethod]
     public void ProduceWhenFullTest()
     {
-      Setup(out List<string> logLines, out ProducerWrapper producer, out BlockingLoggingProducer blockingProducer);
+      Setup(out List<string> logLines, out IWriteBuffer<char> writeBuffer, out BlockingLoggingProducer blockingProducer, out ProducerWrapper<char> producer);
       Task runTask = producer.RunAsync();
-      producer.Produce('f').Should().BeTrue();
-      producer.Produce('r').Should().BeTrue();
-      producer.Produce('e').Should().BeTrue();
+      writeBuffer.TryWrite('f').Should().BeTrue();
+      writeBuffer.TryWrite('r').Should().BeFalse();
+      writeBuffer.TryWrite('e').Should().BeFalse();
 
       // allow 'f' to be written
       blockingProducer.UnblockOne();
       logLines.Should().Contain(s => s.Contains("[Information]produced value 'f'"));
 
+      // allow 'r' to be written
       blockingProducer.UnblockOne();
       logLines.Should().Contain(s => s.Contains("[Information]produced value 'r'"));
     }
 
     [TestMethod]
-    public void ProduceRemainingWhenShutdownTest()
-    {
-      Setup(out List<string> logLines, out ProducerWrapper producer, out BlockingLoggingProducer blockingProducer);
-      Task runTask = producer.RunAsync();
-      producer.Produce('f');
-      producer.Produce('r');
-
-      Task shutdownTask = producer.ShutdownAsync();
-
-      blockingProducer.UnblockOne(); // unblock 'f'
-      logLines.Should().Contain(s => s.Contains("[Information]produced value 'f'"));
-
-      blockingProducer.UnblockOne(); // unblock producing 'r' in ShutdownAsync
-      shutdownTask.Wait();
-      logLines.Should().Contain(s => s.Contains("[Information]produced value 'r'"));
-      logLines.Should().Contain(s => s.Contains("[Information]LoggingProducer.Shutdown"));
-      runTask.Wait();
-    }
-
-    [TestMethod]
     public void ProduceAfterShutdownTest()
     {
-      Setup(out List<string> logLines, out ProducerWrapper producer, out BlockingLoggingProducer underlyingProducer);
+      var cts = new CancellationTokenSource();
+      Setup(
+        out List<string> logLines,
+        out IWriteBuffer<char> writeBuffer,
+        out BlockingLoggingProducer underlyingProducer,
+        out ProducerWrapper<char> producer,
+        cts);
+
       Task runTask = producer.RunAsync();
-      producer.Produce('f');
-      producer.ShutdownAsync().Wait();
-      producer.Produce('r').Should().BeFalse();
+      cts.Cancel();
       runTask.Wait();
+      Action act = () => writeBuffer.TryWrite('f');
+      act.Should().Throw<ObjectDisposedException>();
     }
 
     private static void Setup(
       out List<string> logLines,
-      out ProducerWrapper producer,
-      out BlockingLoggingProducer blockingLoggingProducer)
+      out IWriteBuffer<char> writeBuffer,
+      out BlockingLoggingProducer blockingLoggingProducer,
+      out ProducerWrapper<char> producer,
+      CancellationTokenSource cts = null)
     {
+      CancellationToken token = cts == null ? CancellationToken.None : cts.Token;
       logLines = new List<string>();
       ILogger log = MemoryLog.Create(logLines);
 
       // use a regular logging producer unless an override is passed in
       var factory = new BlockingLoggingProducerFactory(log);
       blockingLoggingProducer = factory.Instance;
-      producer = new ProducerWrapper(factory, CancellationToken.None, 1, true);
+      var channel = new UnboundedChannelFacade<char>();
+      producer = new ProducerWrapper<char>(factory, token, channel);
+      writeBuffer = channel;
     }
 
-    private class BlockingLoggingProducerFactory : IProducerFactory
+    private class BlockingLoggingProducerFactory : IProducerFactory<char>
     {
       public BlockingLoggingProducerFactory(ILogger logger) => this.Instance = new BlockingLoggingProducer(logger);
 
       public BlockingLoggingProducer Instance { get; private set; }
 
-      public IProducer Get(string fileName) => this.Instance;
+      public IProducer<char> Get(string fileName) => this.Instance;
     }
 
-    private class BlockingLoggingProducer : LoggingProducer
+    private class BlockingLoggingProducer : LoggingProducer<char>
     {
       // despite using async, the entire interaction with this queue is single threaded
       // so use of concurrentqueue is not needed

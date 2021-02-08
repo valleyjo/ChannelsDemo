@@ -5,6 +5,7 @@
   using System.IO;
   using System.Threading;
   using System.Threading.Tasks;
+  using ChannelsDemo.ChannelFacade;
   using ChannelsDemo.ProducerFacade;
   using Microsoft.Extensions.Logging;
 
@@ -18,24 +19,29 @@
 
       logger.LogInformation("Starting Producer / Consumer demo");
 
-      var producerFactory = new ProducerFactory(cts.Token, logger, GetWorkingDirectory());
-      var producer = new ProducerWrapper(producerFactory, cts.Token, 10);
+      var producerFactory = new ProducerFactory<char>(
+        cts.Token,
+        logger,
+        GetWorkingDirectory(),
+        (char c) => BitConverter.GetBytes(c));
+
+      var channel = new UnboundedChannelFacade<char>();
+      var producer = new ProducerWrapper<char>(producerFactory, cts.Token, channel);
 
       Task producerTask = producer.RunAsync();
 
-      RunLoop(producer, logger);
+      RunLoop(channel, logger);
       cts.Cancel();
 
       Console.WriteLine();
       logger.LogInformation("Waiting for producer to shutdown");
-      producer.ShutdownAsync().Wait();
       logger.LogInformation("Finished. Exiting.");
     }
 
     private static string GetWorkingDirectory() =>
       Path.GetDirectoryName(Process.GetCurrentProcess().MainModule.FileName);
 
-    private static void RunLoop(ProducerWrapper producer, ILogger logger)
+    private static void RunLoop(IWriteBuffer<char> producer, ILogger logger)
     {
       logger.LogInformation("Press 'esc' to exit");
       logger.LogInformation("Press any key to stream it to the output file:");
@@ -48,7 +54,7 @@
           return;
         }
 
-        producer.Produce(keyPress.KeyChar);
+        producer.TryWrite(keyPress.KeyChar);
       }
     }
  }

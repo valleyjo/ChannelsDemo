@@ -1,70 +1,42 @@
 ﻿namespace ChannelsDemo.ProducerFacade
 {
+  using System;
   using System.Threading;
-  using System.Threading.Channels;
   using System.Threading.Tasks;
+  using ChannelsDemo.ChannelFacade;
 
   /// <summary>
   /// This class wraps an IProducer and allows for unit testing via the ProducerFactory
   /// This is the class we would pass around in the rest of the product code, allowing
   /// isloation from the third party producer.
   /// </summary>
-  public class ProducerWrapper
+  public class ProducerWrapper<T>
   {
+    private static readonly ObjectDisposedException Disposed = new ObjectDisposedException(nameof(ProducerWrapper<T>));
     private readonly CancellationToken token;
-    private readonly IProducerFactory factory;
-    private readonly Channel<char> channel;
-    private IProducer currentProducer;
+    private readonly IProducerFactory<T> factory;
+    private readonly IReadBuffer<T> readBuffer;
+    private IProducer<T> currentProducer;
 
-    public ProducerWrapper(
-      IProducerFactory factory,
-      CancellationToken token,
-      int maxSize = short.MaxValue,
-      bool allowSynchronousContinuations = false)
+    public ProducerWrapper(IProducerFactory<T> factory, CancellationToken token, IReadBuffer<T> readBuffer)
     {
       this.token = token;
       this.factory = factory;
-      var options = new BoundedChannelOptions(maxSize)
-      {
-        FullMode = BoundedChannelFullMode.DropWrite,
-        AllowSynchronousContinuations = allowSynchronousContinuations,
-      };
-
-      this.channel = Channel.CreateBounded<char>(options);
+      this.readBuffer = readBuffer;
     }
-
-    public bool Produce(char value) => this.channel.Writer.TryWrite(value);
 
     public async Task RunAsync()
     {
-      while (!this.channel.Reader.Completion.IsCompleted)
+      while (!this.token.IsCancellationRequested)
       {
-        char value = await this.channel.Reader.ReadAsync();
-        await this.ProduceInternalAsync(value);
-     }
-    }
-
-    public async Task ShutdownAsync()
-    {
-      this.channel.Writer.Complete();
-
-      // clear out any remaining data in the channel before we shut down
-      // If this is used in a primary / secondary model is it possible that an old primary while
-      // shutting down is still clearing out the queue while a new primary comes up and begins producing data?
-      // TODO: Is this needed? Can we just shutdown without producing the remaining data?
-      await foreach (char value in this.channel.Reader.ReadAllAsync())
-      {
+        T value = await this.readBuffer.ReadAsync(this.token);
         await this.ProduceInternalAsync(value);
       }
 
-      if (this.currentProducer != null)
-      {
-        this.currentProducer.Shutdown();
-        this.currentProducer = null;
-      }
+      this.currentProducer.Shutdown();
     }
 
-    private async ValueTask ProduceInternalAsync(char value)
+    private async ValueTask ProduceInternalAsync(T value)
     {
       // once we have data, we need to make sure that we have a working producer.
       if (this.currentProducer == null)

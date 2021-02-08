@@ -2,6 +2,7 @@
 {
   using System;
   using System.IO;
+  using System.Security.Cryptography;
   using System.Threading;
   using System.Threading.Tasks;
   using Microsoft.Extensions.Logging;
@@ -15,15 +16,15 @@
   /// </summary>
   public class FileConnection
   {
-    private const int LowerBoundMaxFileSize = 8;
-    private const int UpperBoundMaxFileSize = 12;
+    private const int LowerboundMaxWrites = 8;
+    private const int UpperboundMaxWrites = 12;
     private readonly string fullFilePath;
     private readonly Random random;
     private readonly CancellationToken token;
     private readonly ILogger logger;
     private FileStream fileStream;
     private FileProducer client;
-    private int charsWritten;
+    private int dataWritten;
 
     public FileConnection(string rootDirectory, string fileName, CancellationToken token, ILogger logger)
     {
@@ -46,24 +47,23 @@
       }
     }
 
-    public async ValueTask WriteAsync(char value)
+    public async ValueTask WriteAsync(ReadOnlyMemory<byte> data)
     {
       if (this.fileStream == null)
       {
         throw new InvalidOperationException("attempted to write to a disconnected file");
       }
 
-      var data = new ReadOnlyMemory<byte>(BitConverter.GetBytes(value));
-      this.charsWritten++;
+      this.dataWritten++;
       await this.fileStream.WriteAsync(data, this.token);
 
-      int randSizeLimit = this.random.Next(LowerBoundMaxFileSize, UpperBoundMaxFileSize + 1);
-      if (this.fileStream != null && this.charsWritten >= randSizeLimit)
+      int randSizeLimit = this.random.Next(LowerboundMaxWrites, UpperboundMaxWrites + 1);
+      if (this.fileStream != null && this.dataWritten >= randSizeLimit)
       {
         // Syncronously disconnect from the file. This is the best we can do to
         // simulate a failure in the connection.
         this.Disconnect();
-        this.charsWritten = 0;
+        this.dataWritten = 0;
         this.logger.LogWarning("Channel randomly disconnected");
       }
     }

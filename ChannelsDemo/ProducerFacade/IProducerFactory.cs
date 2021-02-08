@@ -1,7 +1,7 @@
 ﻿namespace ChannelsDemo.ProducerFacade
 {
-  public interface IProducerFactory
+  public interface IProducerFactory<T>
   {
-    public IProducer Get(string fileName);
+    public IProducer<T> Get(string fileName);
   }
 }

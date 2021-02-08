@@ -1,75 +1,9 @@
-﻿#pragma warning disable SA1402 // FileMayOnlyContainASingleType
-#pragma warning disable SA1403 // FileMayOnlyContainASingleNamespace
-#pragma warning disable SA1649 // FileNameShouldMatchTypeName
-
-namespace Sample
-{
-  using System;
-  using System.Threading;
-  using System.Threading.Channels;
-  using System.Threading.Tasks;
-
-  public interface IChannel<T> : IReadBuffer<T>, IWriteBuffer<T>, IDisposable
-  {
-  }
-
-  public interface IReadBuffer<T>
-  {
-    ValueTask<T> ReadAsync(CancellationToken token);
-  }
-
-  public interface IWriteBuffer<T>
-  {
-    bool TryWrite(T item);
-  }
-
-  public sealed class UnboundedChannelFacade<T> : IChannel<T>
-  {
-    private static readonly Exception Disposed = new ObjectDisposedException(nameof(UnboundedChannelFacade<T>));
-
-    private readonly Channel<T> channel;
-
-    public UnboundedChannelFacade(bool allowSynchronousContinuations = true)
-    {
-      this.channel = Channel.CreateUnbounded<T>(new UnboundedChannelOptions
-      {
-        AllowSynchronousContinuations = allowSynchronousContinuations,
-        SingleReader = true,
-        SingleWriter = true,
-      });
-    }
-
-    public bool TryWrite(T item)
-    {
-      if (!this.channel.Writer.TryWrite(item))
-      {
-        throw Disposed;
-      }
-
-      return true;
-    }
-
-    public async ValueTask<T> ReadAsync(CancellationToken token)
-    {
-      try
-      {
-        return await this.channel.Reader.ReadAsync(token);
-      }
-      catch (ChannelClosedException)
-      {
-        throw Disposed;
-      }
-    }
-
-    public void Dispose() => this.channel.Writer.TryComplete();
-  }
-}
-
-namespace Sample.Test
+﻿namespace ChannelsDemo.Test
 {
   using System;
   using System.Threading;
   using System.Threading.Tasks;
+  using ChannelsDemo.ChannelFacade;
   using FluentAssertions;
   using Microsoft.VisualStudio.TestTools.UnitTesting;
 
@@ -180,13 +114,4 @@ namespace Sample.Test
 
     protected abstract IChannel<T> Create<T>();
   }
-
-  [TestClass]
-  public sealed class UnboundedChannelFacadeTest : ChannelTestBase
-  {
-    protected override IChannel<T> Create<T>() => new UnboundedChannelFacade<T>();
-  }
 }
-#pragma warning restore SA1402 // FileMayOnlyContainASingleType
-#pragma warning restore SA1403 // FileMayOnlyContainASingleNamespace
-#pragma warning restore SA1649 // FileNameShouldMatchTypeName

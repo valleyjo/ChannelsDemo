@@ -1,5 +1,6 @@
 ﻿namespace ChannelsDemo.ThirdPartyProducer
 {
+  using System;
   using System.Threading.Tasks;
   using Microsoft.Extensions.Logging;
 
@@ -19,7 +20,7 @@
       this.logger = logger;
     }
 
-    public async ValueTask ProduceAsync(char value)
+    public async ValueTask ProduceAsync(ReadOnlyMemory<byte> value)
     {
       this.logger.LogInformation($" Attempting to write '{value}' to file");
       await this.connection.WriteAsync(value);
