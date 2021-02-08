@@ -12,7 +12,6 @@
   /// </summary>
   public class ProducerWrapper<T>
   {
-    private static readonly ObjectDisposedException Disposed = new ObjectDisposedException(nameof(ProducerWrapper<T>));
     private readonly CancellationToken token;
     private readonly IProducerFactory<T> factory;
     private readonly IReadBuffer<T> readBuffer;
@@ -29,11 +28,21 @@
     {
       while (!this.token.IsCancellationRequested)
       {
-        T value = await this.readBuffer.ReadAsync(this.token);
-        await this.ProduceInternalAsync(value);
+        try
+        {
+          T value = await this.readBuffer.ReadAsync(this.token);
+          await this.ProduceInternalAsync(value);
+        }
+        catch (OperationCanceledException)
+        {
+          Console.WriteLine("This is the operation cancelled exception");
+        }
       }
 
-      this.currentProducer.Shutdown();
+      if (this.currentProducer != null)
+      {
+        this.currentProducer.Shutdown();
+      }
     }
 
     private async ValueTask ProduceInternalAsync(T value)

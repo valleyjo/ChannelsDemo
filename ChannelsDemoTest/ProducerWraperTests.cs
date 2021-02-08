@@ -65,8 +65,7 @@
       Task runTask = producer.RunAsync();
       cts.Cancel();
       runTask.Wait();
-      Action act = () => writeBuffer.TryWrite('f');
-      act.Should().Throw<ObjectDisposedException>();
+      writeBuffer.TryWrite('f').Should().BeTrue();
     }
 
     private static void Setup(
